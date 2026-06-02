@@ -64,6 +64,49 @@ class KnowledgeEntry(BaseModel):
 def root():
     return {"message": "BarBrain API is running"}
 
+# ── Home ──────────────────────────────────────────────────────
+@app.get("/stats")
+def get_stats():
+    cocktails = supabase.table("cocktails").select("id", count="exact").execute()
+    ingredients = supabase.table("ingredients").select("id", count="exact").execute()
+    knowledge = supabase.table("knowledge_base").select("id", count="exact").execute()
+    
+    # Low stock items
+    low_stock = (
+        supabase.table("inventory")
+        .select("quantity_on_hand, low_threshold, ingredients(name)")
+        .execute()
+    )
+    
+    low = [
+        {
+            "name": row["ingredients"]["name"],
+            "quantity": row["quantity_on_hand"],
+            "threshold": row["low_threshold"],
+        }
+        for row in low_stock.data
+        if row["quantity_on_hand"] is not None
+        and row["quantity_on_hand"] <= row["low_threshold"]
+        and row["quantity_on_hand"] > 0
+    ]
+
+    out = [
+        {
+            "name": row["ingredients"]["name"],
+        }
+        for row in low_stock.data
+        if row["quantity_on_hand"] is not None
+        and row["quantity_on_hand"] == 0
+    ]
+
+    return {
+        "total_cocktails": cocktails.count,
+        "total_ingredients": ingredients.count,
+        "total_knowledge": knowledge.count,
+        "low_stock": low,
+        "out_of_stock": out,
+    }
+
 # ── Cocktails ─────────────────────────────────────────────────
 @app.get("/cocktails")
 def get_cocktails():

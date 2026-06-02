@@ -4,6 +4,7 @@ const api = axios.create({
   baseURL: 'http://127.0.0.1:8000',
 })
 
+export const getStats = () => api.get('/stats')
 export const getCocktails = () => api.get('/cocktails')
 export const getCocktail = (id) => api.get(`/cocktails/${id}`)
 export const createCocktail = (data) => api.post('/cocktails', data)

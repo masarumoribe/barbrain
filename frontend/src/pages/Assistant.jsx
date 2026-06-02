@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { askAssistant } from '../api/client'
+import useWindowWidth from '../hooks/useWindowWidth'
 
 const SUGGESTIONS = [
   "How do I close the bar?",
@@ -9,6 +10,8 @@ const SUGGESTIONS = [
 ]
 
 export default function Assistant() {
+  const width = useWindowWidth()
+  const isMobile = width < 768
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -47,7 +50,11 @@ export default function Assistant() {
   }
 
   return (
-    <div style={styles.container}>
+    <div style={{
+      ...styles.container,
+      margin: '0 auto',
+      maxWidth: isMobile ? '100%' : '720px',
+    }}>
       <h1 style={styles.title}>Ask Masaru</h1>
       <p style={styles.subtitle}>
         Your bar's knowledge base, always at hand.
@@ -55,7 +62,10 @@ export default function Assistant() {
 
       {/* Quick suggestion buttons */}
       {messages.length === 1 && (
-        <div style={styles.suggestions}>
+        <div style={{
+          ...styles.suggestions,
+          gap: isMobile ? '0.4rem' : '0.5rem',
+        }}>
           {SUGGESTIONS.map((s, i) => (
             <button
               key={i}
@@ -121,23 +131,37 @@ export default function Assistant() {
 }
 
 const styles = {
-  container: { maxWidth: '760px', margin: '0 auto' },
-  title: { color: '#e2b96f', marginBottom: '0.5rem' },
-  subtitle: { color: '#aaaaaa', fontSize: '0.9rem', marginBottom: '1.5rem' },
+  container: {
+    maxWidth: '720px',
+    margin: '0 auto',
+  },
+  title: {
+    color: '#ffffff',
+    fontSize: '1.5rem',
+    fontWeight: '700',
+    letterSpacing: '-0.02em',
+    marginBottom: '0.4rem',
+  },
+  subtitle: {
+    color: '#666666',
+    fontSize: '0.875rem',
+    marginBottom: '1.5rem',
+  },
   suggestions: {
     display: 'flex',
     flexWrap: 'wrap',
     gap: '0.5rem',
-    marginBottom: '1.5rem',
+    marginBottom: '2rem',
   },
   suggestionBtn: {
-    backgroundColor: '#1e1e1e',
-    color: '#e2b96f',
-    border: '1px solid #e2b96f44',
+    backgroundColor: '#1a1a1a',
+    color: '#aaaaaa',
+    border: '1px solid #2a2a2a',
     borderRadius: '20px',
-    padding: '0.4rem 0.9rem',
+    padding: '0.45rem 1rem',
     cursor: 'pointer',
     fontSize: '0.85rem',
+    transition: 'border-color 0.15s, color 0.15s',
   },
   thread: {
     display: 'flex',
@@ -152,26 +176,28 @@ const styles = {
     maxWidth: '85%',
   },
   assistantBubble: {
-    backgroundColor: '#1e1e1e',
-    border: '1px solid #333',
+    backgroundColor: '#1a1a1a',
+    border: '1px solid #2a2a2a',
     alignSelf: 'flex-start',
   },
   userBubble: {
-    backgroundColor: '#2a2a1a',
-    border: '1px solid #e2b96f44',
+    backgroundColor: '#1e1a0e',
+    border: '1px solid #e2b96f22',
     alignSelf: 'flex-end',
   },
   label: {
-    fontSize: '0.75rem',
+    fontSize: '0.72rem',
     color: '#e2b96f',
-    fontWeight: 'bold',
+    fontWeight: '600',
     display: 'block',
     marginBottom: '0.4rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
   },
   bubbleText: {
     color: '#cccccc',
-    fontSize: '0.95rem',
-    lineHeight: '1.6',
+    fontSize: '0.92rem',
+    lineHeight: '1.65',
     margin: 0,
     whiteSpace: 'pre-wrap',
   },
@@ -182,28 +208,30 @@ const styles = {
   },
   input: {
     flex: 1,
-    padding: '0.75rem',
-    backgroundColor: '#1e1e1e',
-    border: '1px solid #444',
+    padding: '0.85rem 1rem',
+    backgroundColor: '#1a1a1a',
+    border: '1px solid #2a2a2a',
     borderRadius: '10px',
     color: '#ffffff',
-    fontSize: '0.95rem',
+    fontSize: '0.92rem',
     resize: 'none',
     fontFamily: 'sans-serif',
+    outline: 'none',
   },
   sendButton: {
     backgroundColor: '#e2b96f',
     color: '#111111',
     border: 'none',
     borderRadius: '10px',
-    padding: '0.75rem 1.5rem',
+    padding: '0.85rem 1.5rem',
     cursor: 'pointer',
-    fontWeight: 'bold',
-    fontSize: '0.95rem',
+    fontWeight: '600',
+    fontSize: '0.92rem',
     height: 'fit-content',
+    letterSpacing: '-0.01em',
   },
   hint: {
-    color: '#555555',
+    color: '#444444',
     fontSize: '0.75rem',
     marginTop: '0.5rem',
   },

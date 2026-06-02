@@ -41,11 +41,21 @@ export default function Inventory() {
     }))
   }
 
+  const handleThresholdChange = (ingredientId, value) => {
+    setInventory(prev => ({
+      ...prev,
+      [ingredientId]: {
+        ...prev[ingredientId],
+        low_threshold: value,
+      }
+    }))
+  }
+
   const handleSave = async (ingredientId) => {
     setSaving(ingredientId)
     const current = {
       quantity: parseFloat(inventory[ingredientId]?.quantity) || 0,
-      low_threshold: inventory[ingredientId]?.low_threshold ?? 50,
+      low_threshold: inventory[ingredientId]?.low_threshold || 50,
     }
     try {
       await upsertInventory(ingredientId, current.quantity, current.low_threshold)
@@ -89,9 +99,11 @@ export default function Inventory() {
   if (error)   return <p style={styles.message}>{error}</p>
 
   // Group ingredients by category
-  const grouped = ingredients.reduce((acc, ing) => {
-    if (!acc[ing.category]) acc[ing.category] = []
-    acc[ing.category].push(ing)
+  const CATEGORY_ORDER = ['spirit', 'liqueur', 'beer', 'wine', 'juice', 'syrup', 'bitter', 'other']
+
+  const grouped = CATEGORY_ORDER.reduce((acc, cat) => {
+    const items = ingredients.filter(ing => ing.category === cat).sort((a, b) => a.name.localeCompare(b.name))
+    if (items.length > 0) acc[cat] = items
     return acc
   }, {})
 
@@ -123,6 +135,8 @@ export default function Inventory() {
           >
             <option value="spirit">Spirit</option>
             <option value="liqueur">Liqueur</option>
+            <option value="beer">Beer</option>
+            <option value="wine">Wine</option>
             <option value="juice">Juice</option>
             <option value="syrup">Syrup</option>
             <option value="bitter">Bitter</option>
@@ -134,6 +148,9 @@ export default function Inventory() {
             style={styles.formInput}
           >
             <option value="ml">ml</option>
+            <option value="bottle">bottle</option>
+            <option value="can">can</option>
+            <option value="other">other</option>
             <option value="dash">dash</option>
             <option value="piece">piece</option>
             <option value="oz">oz</option>
@@ -175,10 +192,22 @@ export default function Inventory() {
                     <input
                       type="number"
                       min="0"
-                      value={inventory[ing.id]?.quantity ?? ''}
+                      value={qty}
                       onChange={e => handleQuantityChange(ing.id, e.target.value)}
                       style={styles.input}
                       placeholder="0"
+                    />
+                    <span style={styles.unit}>{ing.unit}</span>
+                  </div>
+                  <div style={styles.thresholdRow}>
+                    <span style={styles.thresholdLabel}>Low at</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={inventory[ing.id]?.low_threshold ?? 50}
+                      onChange={e => handleThresholdChange(ing.id, e.target.value)}
+                      style={{ ...styles.input, width: '60px' }}
+                      placeholder="50"
                     />
                     <span style={styles.unit}>{ing.unit}</span>
                     <button
@@ -188,7 +217,7 @@ export default function Inventory() {
                     >
                       {saving === ing.id ? '...' : 'Save'}
                     </button>
-                  </div>
+</div>
                 </div>
               )
             })}
@@ -305,6 +334,17 @@ const styles = {
     borderRadius: '6px',
     color: '#ffffff',
     fontSize: '0.9rem',
+  },
+  thresholdRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginTop: '0.4rem',
+  },
+  thresholdLabel: {
+    color: '#888888',
+    fontSize: '0.75rem',
+    whiteSpace: 'nowrap',
   },
   addButton: {
     backgroundColor: '#e2b96f',
