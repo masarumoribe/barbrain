@@ -1,8 +1,9 @@
 import os
 import anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from supabase import create_client
 from pydantic import BaseModel
 
@@ -12,6 +13,8 @@ supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 
 app = FastAPI()
 
+PUBLIC_PATHS = {"/", "/openapi.json", "/docs", "/docs/oauth2-redirect", "/redoc"}
+
 # ── CORS ──────────────────────────────────────────────────────
 # This allows your React frontend to talk to this backend
 app.add_middleware(
@@ -20,6 +23,38 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def verify_supabase_token(token: str):
+    try:
+        user_response = supabase.auth.get_user(token)
+        return user_response.user
+    except Exception:
+        return None
+
+
+@app.middleware("http")
+async def require_auth(request: Request, call_next):
+    if request.method == "OPTIONS" or request.url.path in PUBLIC_PATHS:
+        return await call_next(request)
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Missing bearer token"},
+        )
+
+    token = auth_header.split(" ", 1)[1].strip()
+    user = verify_supabase_token(token)
+    if not user:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Invalid or expired token"},
+        )
+
+    request.state.user = user
+    return await call_next(request)
 
 # ── Pydantic models ──────────────────────────────────────────
 class IngredientCreate(BaseModel):
@@ -63,6 +98,14 @@ class KnowledgeEntry(BaseModel):
 @app.get("/")
 def root():
     return {"message": "BarBrain API is running"}
+
+
+@app.get("/auth/me")
+def get_current_user(request: Request):
+    return {
+        "id": request.state.user.id,
+        "email": request.state.user.email,
+    }
 
 # ── Home ──────────────────────────────────────────────────────
 @app.get("/stats")

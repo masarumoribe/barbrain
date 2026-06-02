@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import useWindowWidth from '../hooks/useWindowWidth'
+import { useAuth } from '../context/AuthContext'
 
 const links = [
   { to: '/', label: 'Home' },
@@ -15,6 +16,11 @@ export default function Navbar() {
   const width = useWindowWidth()
   const isMobile = width < 768
   const [menuOpen, setMenuOpen] = useState(false)
+  const { user, loading, signOut } = useAuth()
+
+  if (loading || !user) {
+    return null
+  }
 
   return (
     <nav style={styles.nav}>
@@ -43,25 +49,43 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false)
+                  signOut()
+                }}
+                style={styles.mobileLogoutButton}
+              >
+                Log out
+              </button>
             </div>
           )}
         </>
       ) : (
-        <div style={styles.links}>
-          {links.map(link => (
-            <Link
-              key={link.to}
-              to={link.to}
-              style={{
-                ...styles.link,
-                ...(location.pathname === link.to ? styles.activeLink : {}),
-              }}
-            >
-              {link.label}
-              {location.pathname === link.to && <span style={styles.activeDot} />}
-            </Link>
-          ))}
-        </div>
+        <>
+          <div style={styles.links}>
+            {links.map(link => (
+              <Link
+                key={link.to}
+                to={link.to}
+                style={{
+                  ...styles.link,
+                  ...(location.pathname === link.to ? styles.activeLink : {}),
+                }}
+              >
+                {link.label}
+                {location.pathname === link.to && <span style={styles.activeDot} />}
+              </Link>
+            ))}
+          </div>
+          <div style={styles.accountBox}>
+            <span style={styles.userEmail}>{user.email}</span>
+            <button type="button" onClick={signOut} style={styles.logoutButton}>
+              Log out
+            </button>
+          </div>
+        </>
       )}
     </nav>
   )
@@ -139,5 +163,39 @@ const styles = {
   mobileLinkActive: {
     color: '#e2b96f',
     backgroundColor: '#1a1a1a',
+  },
+  accountBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginLeft: '0.75rem',
+  },
+  userEmail: {
+    color: '#aaaaaa',
+    fontSize: '0.8rem',
+    maxWidth: '220px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  logoutButton: {
+    border: '1px solid #2f2f2f',
+    borderRadius: '6px',
+    backgroundColor: 'transparent',
+    color: '#dddddd',
+    cursor: 'pointer',
+    padding: '0.3rem 0.55rem',
+    fontSize: '0.8rem',
+  },
+  mobileLogoutButton: {
+    margin: '0.75rem 1rem 0',
+    border: '1px solid #2f2f2f',
+    borderRadius: '6px',
+    backgroundColor: 'transparent',
+    color: '#dddddd',
+    cursor: 'pointer',
+    padding: '0.6rem',
+    fontSize: '0.95rem',
+    textAlign: 'left',
   },
 }
