@@ -19,7 +19,10 @@ PUBLIC_PATHS = {"/", "/openapi.json", "/docs", "/docs/oauth2-redirect", "/redoc"
 # This allows your React frontend to talk to this backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],  # Vite's default port
+    allow_origins=[
+        "http://localhost:5173", 
+        "http://localhost:5174",
+        "https://barbrain-production.up.railway.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
