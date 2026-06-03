@@ -27,7 +27,6 @@ export const upsertInventory = (ingredientId, quantity, lowThreshold) =>
   api.post(`/inventory/${ingredientId}?quantity=${quantity}&low_threshold=${lowThreshold}`)
 export const createIngredient = (name, category, unit) =>
   api.post('/ingredients', { name, category, unit })
-export const matchCocktails = () => api.get('/cocktails/match/inventory')
 export const getKnowledge = () => api.get('/knowledge')
 export const createKnowledge = (data) => api.post('/knowledge', data)
 export const updateKnowledge = (id, data) => api.put(`/knowledge/${id}`, data)
